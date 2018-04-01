@@ -83,8 +83,13 @@ void loop()
     {
         //Serial.println("CONNECTION FAILED");
     }
-
-    client.println(data);
+    while(client.connected()){
+      readDataStream();
+      if (data.equals("")){
+        continue;   //Don't do anything if no new data to send
+      }
+      client.println(data);
+    }
 
 
     //ßclient.println();
