@@ -42,7 +42,7 @@ class GUI():
                 self.sb3.config(command=partial(self.callback, self.sb3 , "RD"))
                 self.sb3.grid(row=3, column=2)
                 self.sb3.delete(0, "end")
-                self.sb3.insert(0, 0.4)
+                self.sb3.insert(0, 0.6)
 
 		self.l10 = Label(self.master, text="Target Roll")
                 self.l10.grid(row=4, column=1)
