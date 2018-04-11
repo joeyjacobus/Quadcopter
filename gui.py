@@ -61,7 +61,7 @@ class GUI():
                 self.sb4.config(command=partial(self.callback, self.sb4 , "PP"))
                 self.sb4.grid(row=6, column=2)
                 self.sb4.delete(0, "end")
-                self.sb4.insert(0, 0.6)
+                self.sb4.insert(0, 1.6)
 
 		self.l5 = Label(self.master, text="Pitch Ival")
                 self.l5.grid(row=7, column=1)
@@ -69,7 +69,7 @@ class GUI():
                 self.sb5.config(command=partial(self.callback, self.sb5 , "PI"))
                 self.sb5.grid(row=7, column=2)
                 self.sb5.delete(0, "end")
-                self.sb5.insert(0, 0.6)
+                self.sb5.insert(0, 1.2)
 
 
 		self.l6 = Label(self.master, text="Pitch Dval")
@@ -78,7 +78,7 @@ class GUI():
                 self.sb6.config(command=partial(self.callback, self.sb6 , "PD"))
                 self.sb6.grid(row=8, column=2)
                 self.sb6.delete(0, "end")
-                self.sb6.insert(0, 0.3)
+                self.sb6.insert(0, 0.4)
 
 		self.l11 = Label(self.master, text="Target Pitch")
                 self.l11.grid(row=9, column=1)

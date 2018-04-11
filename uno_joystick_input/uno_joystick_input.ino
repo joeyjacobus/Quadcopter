@@ -28,7 +28,8 @@
  */
 #define ESP_ENABLE 8
 #define ESP_RST 7
- 
+#define LS_CLICK_PIN 2
+
 int sensorPinLX = A5;
 int sensorPinLY = A4;    // select the input pin for the potentiometer
  
@@ -42,6 +43,13 @@ int sensorValueLY = 0;  // variable to store the value coming from the sensor
 int sensorValueRX = 0;  // variable to store the value coming from the sensor
 int sensorValueRY = 0;  // variable to store the value coming from the sensor
 
+bool WAITFORSTART = false;
+
+void leftStickClicked(void){
+  Serial.println("START");
+  WAITFORSTART= true;
+}
+
 void setup() {
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);  
@@ -50,7 +58,12 @@ void setup() {
   digitalWrite(ESP_ENABLE, HIGH);
   digitalWrite(ESP_RST, LOW);
   Serial.begin(115200);
+  pinMode(LS_CLICK_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(LS_CLICK_PIN), leftStickClicked, FALLING);
   //Serial2.begin(115200);
+  while(!WAITFORSTART){
+    delay(100);
+  }
 }
 
 void loop() {
