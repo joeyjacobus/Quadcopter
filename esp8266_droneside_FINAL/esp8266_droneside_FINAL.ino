@@ -25,17 +25,16 @@ void setup() {
 void loop() {
   // listen for incoming clients
  client = server.available();
+ Serial.println("checking.");
   if (client){
     client.setTimeout(1000);
-    //Serial.println("Client connected");
+    Serial.println("Client connected");
     while (client.connected()){
         // Read the incoming TCP command
         String command = client.readStringUntil('\n');
         // Debugging display command
         
         Serial.println(command);
-        // Phrase the command
-        //PhraseTCPCommand(&client, &command);
         client.flush();
     }
   }

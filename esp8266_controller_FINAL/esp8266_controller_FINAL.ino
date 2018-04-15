@@ -30,10 +30,10 @@ void setup()
     while (WiFi.status() != WL_CONNECTED) 
     {
         delay(500);
-        //Serial.print(".");  // print dots until connection
+        Serial.print(".");  // print dots until connection
     }
     //Serial.println();
-    //Serial.println("WiFi CONNECTED");
+    Serial.println("WiFi CONNECTED");
 }
 
 String data;
@@ -84,6 +84,7 @@ void loop()
         //Serial.println("CONNECTION FAILED");
     }
     while(client.connected()){
+      //Serial.println("*");
       readDataStream();
       if (data.equals("")){
         continue;   //Don't do anything if no new data to send
@@ -97,7 +98,7 @@ void loop()
     client.flush();
 
     delay(1);
-    //Serial.println("CLIENT DISCONNECTED");
+    Serial.println("CLIENT DISCONNECTED");
     //Serial.println();
 
 }
