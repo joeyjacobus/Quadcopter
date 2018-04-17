@@ -104,5 +104,5 @@ void loop() {
   // turn the ledPin off:        
   digitalWrite(ledPin, LOW);   
   // stop the program for for <sensorValue> milliseconds:
-  delay(100);                  
+  delay(150);                  
 }
