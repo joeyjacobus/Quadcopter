@@ -32,8 +32,10 @@ void setup()
         delay(500);
         Serial.print(".");  // print dots until connection
     }
-    //Serial.println();
+    Serial.println();
     Serial.println("WiFi CONNECTED");
+    client.println("testing!");
+
 }
 
 String data;
@@ -98,7 +100,7 @@ void loop()
     client.flush();
 
     delay(1);
-    Serial.println("CLIENT DISCONNECTED");
+    //Serial.println("CLIENT DISCONNECTED");
     //Serial.println();
 
 }
