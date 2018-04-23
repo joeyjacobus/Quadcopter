@@ -89,7 +89,6 @@ double YAW_MAX = 400;
 PID yawPID(&yaw, &yaw_feedback, &TARGET_YAW, YAW_P, YAW_I, YAW_D, DIRECT);
 
 
-
 long LAST_READ_FROM_WIFI; /* Keeps track of the last time we got something from the Wifi chip */
 
 
@@ -203,6 +202,10 @@ void readSpeedFromWifi(){
       
 //      Serial.print("Base thrust:");
 //      Serial.println(base_thrust);
+      if (base_thrust == 0 && chksum == 0){
+        return;
+      }
+
       /* Chksum should be the same value and make sure valid esc value */
       if (base_thrust != chksum || base_thrust < SPEED_MIN || base_thrust > SPEED_MAX){
         LAST_READ_FROM_WIFI = micros();  
@@ -501,9 +504,9 @@ void setup() {
 unsigned long last = 0;
 
 void loop() {
-  unsigned long now = micros();
-  if (now - last > 5000) Serial.println(now - last);
-  last = now;
+  //unsigned long now = micros();
+  //if (now - last > 5000) Serial.println(now - last);
+  //last = now;
   /* Check for any new commands over serial monitor */
 	checkSerial0();
   
