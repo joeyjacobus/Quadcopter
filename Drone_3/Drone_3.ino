@@ -27,7 +27,7 @@
 #define MAX_ACCELERATION 0.5
 
 #define PID_THRESHOLD 1000                                //the limit at which to start the PID control loop
-#define PID_SAMPLE_RATE 5
+#define PID_SAMPLE_RATE 6
 
 /* Must be less than Speed max so we have room to balance */
 #define MAX_TOTAL_THRUST 1800
@@ -193,21 +193,60 @@ void readSpeedFromWifi(){
   if(Serial1.available()){
       input = Serial1.readStringUntil('\n');
       //Serial.println(input);
-      //int base_thrust = Serial1.parseInt();
-      //int chksum = Serial1.parseInt();
-      int spaceIndex = input.indexOf(' ', 0);
-      String substr = input.substring(0, spaceIndex);
-      int base_thrust = substr.toInt();
-      int chksum = input.substring(spaceIndex + 1, input.length()).toInt();
+//      int base_thrust = input.parseInt();
+//      int ROLL = input.parseInt();
+//      int chksum = input.parseInt();
+
+      int spaceIndex;
+      int startIndex = 0;
+      int base_thrust;
+      int target_roll;
+      int target_pitch;
+      int chksum;
+      String substr;
+
+      /* First number is base thrust */
+      spaceIndex = input.indexOf(' ', startIndex);
+      substr = input.substring(startIndex, spaceIndex);
+      base_thrust= substr.toInt();     
+      startIndex = spaceIndex + 1;
+
+       /* Second number is target roll */
+      spaceIndex = input.indexOf(' ',  startIndex);
+      substr = input.substring(startIndex, spaceIndex);
+      target_roll = substr.toInt();
+      startIndex = spaceIndex + 1;
+
+      /* Third number is target pitch  */
+      spaceIndex = input.indexOf(' ',  startIndex);
+      substr = input.substring(startIndex, spaceIndex);
+      target_pitch = substr.toInt();
+      startIndex = spaceIndex + 1;
+
+      /* Last number is the checksum */
+      spaceIndex = input.indexOf(' ',  startIndex);
+      substr = input.substring(startIndex, spaceIndex);
+      chksum = substr.toInt();
+      startIndex = spaceIndex + 1;
+
+      if (chksum != (base_thrust + target_roll + target_pitch ) % 256){
+        return;
+      }
       
+//      Serial.print(base_thrust);
+//      Serial.print("  ");
+//      Serial.print(target_roll);
+//      Serial.print("  ");
+//      Serial.print(target_pitch);
+//      Serial.print("  ");
+//      Serial.println(chksum);
 //      Serial.print("Base thrust:");
 //      Serial.println(base_thrust);
       if (base_thrust == 0 && chksum == 0){
         return;
       }
 
-      /* Chksum should be the same value and make sure valid esc value */
-      if (base_thrust != chksum || base_thrust < SPEED_MIN || base_thrust > SPEED_MAX){
+      if ( base_thrust < SPEED_MIN || base_thrust > SPEED_MAX){
         LAST_READ_FROM_WIFI = micros();  
         return;
       }
@@ -217,6 +256,9 @@ void readSpeedFromWifi(){
       MOTOR_FR_BASE = base_thrust;
       MOTOR_BL_BASE = base_thrust;
       MOTOR_BR_BASE = base_thrust;
+
+      TARGET_ROLL = target_roll;
+      TARGET_PITCH = target_pitch;
 
       LAST_READ_FROM_WIFI = micros();  
 
@@ -233,110 +275,7 @@ void readSpeedFromWifi(){
       }
     }
  }
-//  else{
-//    Serial.println("It wasn't there....\n");
-//  }
 }
-
-
-void readSpeedFromWifiSlow(){
-	if(Serial1.available()){
-		input = Serial1.readStringUntil('\n');
-//		Serial.print("-");
-//		Serial.println(input);
-
-
-		/* Parse the joystick values */
-		/**
-		*  Format is
-		*  "LX=100 LY=200 RX=300 RY=400\n"
-		*/
-		int startIndex = 0;
-		int spaceIndex = 0;
-    int lx, ly, rx, ry, checksum;
-		String substr;
-		String value;
-		if (input.startsWith("LX=")){
-
-			spaceIndex = input.indexOf(' ', startIndex);
-			substr = input.substring(startIndex, spaceIndex); 
-      if (substr.startsWith("LX=")){
-        value = substr.substring(3, substr.length()); 
-        lx = value.toInt();
-      }
-			startIndex = spaceIndex + 1;
-
-			spaceIndex = input.indexOf(' ', startIndex);
-			substr = input.substring(startIndex, spaceIndex);
-      if (substr.startsWith("LY")){
-  			value = substr.substring(3, substr.length()); 
-  			ly = value.toInt();
-      }
-			startIndex = spaceIndex + 1; 
-
-			spaceIndex = input.indexOf(' ', startIndex); 
-			substr = input.substring(startIndex, spaceIndex);
-      if (substr.startsWith("RX")){
-  			value = substr.substring(3, substr.length()); 
-  			rx = value.toInt();
-      }
-			startIndex = spaceIndex + 1; 
-
-      spaceIndex = input.indexOf(' ', startIndex);
-			substr = input.substring(startIndex, spaceIndex);
-      if (substr.startsWith("RY")){
-  			value = substr.substring(3, substr.length()); 
-  			ry = value.toInt();
-      }
-      startIndex = spaceIndex + 1; 
-
-      
-      spaceIndex = input.indexOf(' ', startIndex);
-      substr = input.substring(startIndex, spaceIndex);
-      /* Must include a checksum */
-      if (!substr.startsWith("CK")){
-        return;
-      }
-      value = substr.substring(3, substr.length()); 
-      checksum = value.toInt();
-
-      /* make sure our checksum matches */
-      if (checksum == (lx + ly + rx + ry) % 256){
-        JOYSTICK_LX = lx;
-        JOYSTICK_LY = ly;
-        JOYSTICK_RX = rx;
-        JOYSTICK_RY = ry;
-      }
-
-      
-//			Serial.print("LX=");
-//			Serial.print(JOYSTICK_LX);
-//			Serial.print(" LY=");
-//			Serial.print(JOYSTICK_LY);
-//			Serial.print(" RX=");
-//			Serial.print(JOYSTICK_RX);
-//			Serial.print(" RY=");
-//			Serial.println(JOYSTICK_RY);
-      LAST_READ_FROM_WIFI = micros();  
-		}
-	}
- else{
-    if (WIFI_DISCONNECT_DO_TIMEOUT){
-      if (micros() - LAST_READ_FROM_WIFI > WIFI_DISCONNECT_TIMEOUT){
-        Serial.println("Lost connection");
-        slowMotorsToStop();
-        JOYSTICK_LX = 512;
-        JOYSTICK_LY = 512;
-        JOYSTICK_RX = 512;
-        JOYSTICK_RY = 512;
-      }
-    }
- }
-//	else{
-//		Serial.println("It wasn't there....\n");
-//	}
-}
-
 
 void ESCArmAll(){
 	Serial.print("Arming ESCs...");
@@ -504,9 +443,9 @@ void setup() {
 unsigned long last = 0;
 
 void loop() {
-  //unsigned long now = micros();
-  //if (now - last > 5000) Serial.println(now - last);
-  //last = now;
+//  unsigned long now = micros();
+//  if (now - last > 5000) Serial.println(now - last);
+//  last = now;
   /* Check for any new commands over serial monitor */
 	checkSerial0();
   

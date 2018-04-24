@@ -48,11 +48,15 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 
 
 #define SPEED_MIN 1000
-#define MIN_THRUST 1150
-#define TAKEOFF_THRUST 1350
-#define MAX_CONTROLLER_THRUST 1425                        // The maximum value the controller can set the base thrust
+#define MIN_THRUST 1200
+#define TAKEOFF_THRUST 1300
+#define MAX_CONTROLLER_THRUST 1300                        // The maximum value the controller can set the base thrust
+
+#define MAX_ROLL 10
+#define MAX_PITCH 10
 
 
+#define JOYSTICK_HYST 20
 
 int sensorPinLX = A5;
 int sensorPinLY = A4;    // select the input pin for the potentiometer
@@ -60,12 +64,15 @@ int sensorPinLY = A4;    // select the input pin for the potentiometer
 int sensorPinRX = A1;
 int sensorPinRY = A0;    // select the input pin for the potentiometer
 
+int sensorPinSlidePot = A2;
+
 int ledPin = LED_BUILTIN;      // select the pin for the LED
 
 int sensorValueLX = 0;  // variable to store the value coming from the sensor
 int sensorValueLY = 0;  // variable to store the value coming from the sensor
 int sensorValueRX = 0;  // variable to store the value coming from the sensor
 int sensorValueRY = 0;  // variable to store the value coming from the sensor
+int sensorValueSlidePot = 0;
 
 bool WAITFORSTART = false;
 
@@ -159,14 +166,14 @@ void sendJoystickVals(void){
 }
 
 
-void sendBaseThrust(void){
+void sendBaseThrustOnly(void){
   int thrust;
   int base1 = sensorValueLY - 512;
   int base2 = sensorValueRY - 512;
-  if (base1 < 30 && base1 > -30){
+  if (base1 < JOYSTICK_HYST && base1 > -JOYSTICK_HYST){
     base1 = 0;
   }    
-  if (base2 < 30 && base2 > -30){
+  if (base2 < JOYSTICK_HYST && base2 > -JOYSTICK_HYST){
     base2 = 0;
   }    
   
@@ -181,6 +188,8 @@ void sendBaseThrust(void){
   }
   Serial.print(thrust);
   Serial.print(" ");
+
+  /* Send the checksum */
   Serial.print(thrust);
   Serial.print("\n");
   tft.setCursor(10, 70);
@@ -189,17 +198,74 @@ void sendBaseThrust(void){
 
 }
 
+void sendPitchRollBaseThrust(void) {
+  int thrust;
+  int pitch; 
+  int roll;
+  int checksum;
+  int slide = sensorValueSlidePot;
+  int ry = sensorValueRY - 512;
+  int rx = sensorValueRX - 512;
+
+  if (rx < JOYSTICK_HYST && rx > -JOYSTICK_HYST){
+    rx = 0;
+  }      
+  if (ry < JOYSTICK_HYST && ry > -JOYSTICK_HYST){
+    ry = 0;
+  }    
+  
+  if (slide == 0){
+    thrust = SPEED_MIN;
+  }
+  else{
+    thrust = map(slide, 0, 1023, MIN_THRUST, MAX_CONTROLLER_THRUST);
+  }
+  
+  if (rx == 0){
+    roll = 0.0;
+  }
+  else{
+    roll = map(rx, -512, 512, -MAX_ROLL, MAX_ROLL);
+  }
+  if (ry == 0){
+     pitch = 0.0;
+  }
+  else{
+     pitch = map(ry, -512, 512, -MAX_PITCH, MAX_PITCH);
+  }
+  
+  checksum = ( thrust + roll + pitch ) % 256;
+  Serial.print(thrust);
+  Serial.print(" ");
+  Serial.print(roll);
+  Serial.print(" ");
+  Serial.print(pitch);
+  Serial.print(" ");
+  Serial.println(checksum);
+
+  tft.setCursor(0, 70);
+  tft.println(thrust);
+  tft.print(roll);
+  tft.println("    ");
+  tft.print(pitch);
+  tft.println("    ");
+  
+}
+
 void loop() {
   // read the value from the sensor:
   sensorValueLX = analogRead(sensorPinLX); 
   sensorValueLY = analogRead(sensorPinLY); 
   sensorValueRX = analogRead(sensorPinRX); 
   sensorValueRY = analogRead(sensorPinRY);   
+  sensorValueSlidePot = analogRead(sensorPinSlidePot);
+
   // turn the ledPin on
   digitalWrite(ledPin, HIGH);  
 
   
-  sendBaseThrust();
+  //sendBaseThrustOnly();
+  sendPitchRollBaseThrust();
   //sendJoystickVals();
  
   
